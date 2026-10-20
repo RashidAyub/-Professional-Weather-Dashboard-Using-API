@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyPulse Pro - Professional Weather Dashboard</title>
+  <meta name="description" content="A professional, responsive weather dashboard with glassmorphism design, real-time weather data, 5-day forecast, hourly projections, and dynamic atmospheric themes.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for clean UI elements -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-default">
+  <!-- Dynamic Atmospheric Background & Ambient Glows -->
+  <div class="ambient-background" id="ambientBg">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+    <div class="weather-particles" id="weatherParticles"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Top Navigation & Header -->
+    <header class="app-header">
+      <div class="brand-container">
+        <div class="brand-icon">
+          <i class="fa-solid fa-cloud-bolt"></i>
+        </div>
+        <div class="brand-text">
+          <h1>SkyPulse <span>Pro</span></h1>
+          <p class="tagline">Weather Intelligence Platform</p>
+        </div>
+      </div>
+
+      <!-- Live Clock & Date -->
+      <div class="datetime-pill">
+        <div class="live-dot" aria-hidden="true"></div>
+        <span id="liveClock">--:--:--</span>
+        <span class="divider">|</span>
+        <span id="liveDate">Loading date...</span>
+      </div>
+
+      <!-- Header Controls: Unit Toggle, Refresh, API Settings -->
+      <div class="header-actions">
+        <!-- Unit Toggle -->
+        <div class="unit-toggle-group" role="group" aria-label="Temperature unit selection">
+          <button type="button" class="unit-btn active" id="unitCelsiusBtn" title="Switch to Celsius">°C</button>
+          <button type="button" class="unit-btn" id="unitFahrenheitBtn" title="Switch to Fahrenheit">°F</button>
+        </div>
+
+        <!-- Refresh Button -->
+        <button type="button" class="action-btn" id="refreshBtn" title="Refresh weather data" aria-label="Refresh weather data">
+          <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
+        </button>
+
+        <!-- API Config Settings Button -->
+        <button type="button" class="action-btn key-btn" id="apiModalBtn" title="API Configuration">
+          <i class="fa-solid fa-key"></i>
+          <span class="api-status-badge" id="apiStatusBadge">Demo</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Search & Quick Chips Bar -->
+    <section class="search-section" aria-label="Search and quick locations">
+      <form class="search-form" id="searchForm">
+        <div class="search-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input 
+            type="text" 
+            id="cityInput" 
+            class="search-input" 
+            placeholder="Search city (e.g., London, Tokyo, New York, Mumbai)..." 
+            autocomplete="off"
+            spellcheck="false"
+            required
+          >
+          <button type="button" class="clear-btn" id="clearSearchBtn" title="Clear input" aria-label="Clear input">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="searchBtn">
+          <span>Search</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <!-- Geolocation Button -->
+        <button type="button" class="btn btn-glass geo-btn" id="geoBtn" title="Use current GPS location" aria-label="Use current location">
+          <i class="fa-solid fa-location-crosshairs"></i>
+          <span class="geo-text">My Location</span>
+        </button>
+      </form>
+
+      <!-- Quick City Chips -->
+      <div class="quick-cities-container">
+        <span class="chips-label"><i class="fa-solid fa-bolt-lightning"></i> Popular:</span>
+        <div class="quick-chips" id="quickChips">
+          <button type="button" class="chip" data-city="London">London</button>
+          <button type="button" class="chip" data-city="New York">New York</button>
+          <button type="button" class="chip" data-city="Tokyo">Tokyo</button>
+          <button type="button" class="chip" data-city="Paris">Paris</button>
+          <button type="button" class="chip" data-city="Dubai">Dubai</button>
+          <button type="button" class="chip" data-city="Sydney">Sydney</button>
+          <button type="button" class="chip" data-city="Mumbai">Mumbai</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Status / Notification Alert Banner -->
+    <div class="alert-banner" id="alertBanner" role="alert" aria-live="assertive">
+      <div class="alert-content">
+        <i class="fa-solid fa-circle-exclamation alert-icon" id="alertIcon"></i>
+        <span class="alert-message" id="alertMessage">Notification</span>
+      </div>
+      <button type="button" class="alert-dismiss" id="alertDismissBtn" aria-label="Close notification">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Main Dashboard Content Grid -->
+    <main class="dashboard-grid" id="dashboardContent">
+      
+      <!-- Primary Current Weather Hero Card -->
+      <section class="card hero-card" id="heroCard">
+        <div class="card-glass-glow"></div>
+        <div class="hero-top">
+          <div class="location-meta">
+            <div class="location-heading">
+              <i class="fa-solid fa-location-dot location-pin"></i>
+              <h2 id="cityName">London</h2>
+              <span class="country-badge" id="countryCode">GB</span>
+            </div>
+            <p class="local-time" id="localTimeText">Local Time: --:--</p>
+          </div>
+          
+          <div class="condition-pill" id="conditionPill">
+            <i class="fa-solid fa-cloud-sun" id="conditionPillIcon"></i>
+            <span id="conditionText">Scattered Clouds</span>
+          </div>
+        </div>
+
+        <div class="hero-center">
+          <div class="temp-display">
+            <span class="temperature" id="currentTemp">18</span>
+            <span class="temp-unit" id="displayUnit">°C</span>
+          </div>
+          <div class="weather-visual-box">
+            <div class="weather-icon-wrapper" id="weatherIconWrapper">
+              <!-- Dynamic Icon inserted by JavaScript -->
+              <i class="fa-solid fa-cloud-sun-rain main-weather-icon" id="mainWeatherIcon"></i>
+            </div>
+            <p class="weather-desc" id="weatherDescription">Partly cloudy with light breeze</p>
+          </div>
+        </div>
+
+        <div class="hero-bottom">
+          <div class="temp-range">
+            <span class="high-temp"><i class="fa-solid fa-arrow-up"></i> H: <strong id="highTemp">21°</strong></span>
+            <span class="low-temp"><i class="fa-solid fa-arrow-down"></i> L: <strong id="lowTemp">13°</strong></span>
+          </div>
+          <div class="hero-sun-times">
+            <div class="sun-item">
+              <i class="fa-solid fa-sun sunrise-icon"></i>
+              <div>
+                <span class="sun-label">Sunrise</span>
+                <span class="sun-val" id="sunriseTime">06:24 AM</span>
+              </div>
+            </div>
+            <div class="sun-divider"></div>
+            <div class="sun-item">
+              <i class="fa-solid fa-moon sunset-icon"></i>
+              <div>
+                <span class="sun-label">Sunset</span>
+                <span class="sun-val" id="sunsetTime">07:48 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Today's Weather Metrics Grid -->
+      <section class="highlights-section" aria-label="Today's detailed weather highlights">
+        <h3 class="section-title"><i class="fa-solid fa-chart-simple"></i> Weather Metrics</h3>
+        
+        <div class="metrics-grid">
+          <!-- Feels Like -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Feels Like</span>
+              <div class="metric-icon-bubble"><i class="fa-solid fa-temperature-half"></i></div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-val" id="feelsLikeVal">18°</span>
+            </div>
+            <p class="metric-hint" id="feelsLikeHint">Similar to actual temperature</p>
+          </div>
+
+          <!-- Humidity -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Humidity</span>
+              <div class="metric-icon-bubble"><i class="fa-solid fa-droplet"></i></div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-val" id="humidityVal">68%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-fill" id="humidityProgress" style="width: 68%;"></div>
+            </div>
+            <p class="metric-hint" id="dewPointHint">Dew point is 12°</p>
+          </div>
+
+          <!-- Wind Speed & Direction -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Wind</span>
+              <div class="metric-icon-bubble"><i class="fa-solid fa-wind"></i></div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-val" id="windSpeedVal">14 km/h</span>
+            </div>
+            <div class="wind-direction-row">
+              <i class="fa-solid fa-arrow-up wind-compass-arrow" id="windCompass"></i>
+              <span class="wind-direction-text" id="windDirText">SSW (190°)</span>
+            </div>
+            <p class="metric-hint" id="windGustHint">Gusts up to 22 km/h</p>
+          </div>
+
+          <!-- Atmospheric Pressure -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Air Pressure</span>
+              <div class="metric-icon-bubble"><i class="fa-solid fa-gauge-high"></i></div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-val" id="pressureVal">1014 hPa</span>
+            </div>
+            <p class="metric-hint" id="pressureHint">Normal sea-level pressure</p>
+          </div>
+
+          <!-- Visibility -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Visibility</span>
+              <div class="metric-icon-bubble"><i class="fa-solid fa-eye"></i></div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-val" id="visibilityVal">10 km</span>
+            </div>
+            <p class="metric-hint" id="visibilityHint">Clear and unobstructed</p>
+          </div>
+
+          <!-- Cloud Cover / UV -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Cloud Cover</span>
+              <div class="metric-icon-bubble"><i class="fa-solid fa-cloud"></i></div>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-val" id="cloudVal">45%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-fill" id="cloudProgress" style="width: 45%;"></div>
+            </div>
+            <p class="metric-hint" id="cloudHint">Scattered cloud layers</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 24-Hour Hourly Forecast Section -->
+      <section class="card forecast-section hourly-section" aria-label="Hourly Forecast">
+        <div class="section-header-row">
+          <h3 class="section-title"><i class="fa-solid fa-clock"></i> 24-Hour Forecast</h3>
+          <span class="forecast-tip">3-Hour Intervals</span>
+        </div>
+        <div class="hourly-track" id="hourlyTrack">
+          <!-- Rendered dynamically by script.js -->
+        </div>
+      </section>
+
+      <!-- 5-Day Extended Weather Forecast Section -->
+      <section class="card forecast-section daily-section" aria-label="5-Day Weather Forecast">
+        <div class="section-header-row">
+          <h3 class="section-title"><i class="fa-solid fa-calendar-days"></i> 5-Day Weather Outlook</h3>
+          <span class="forecast-tip">Next 5 Days Projection</span>
+        </div>
+        <div class="daily-forecast-list" id="dailyForecastList">
+          <!-- Rendered dynamically by script.js -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>SkyPulse Pro Weather Intelligence • Built with HTML5, CSS3 & Modern JavaScript</p>
+        <p class="internship-credit">Frontend Developer Internship — <strong>Task 4</strong> | Powered by OpenWeather API</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- API Key & Settings Modal -->
+  <div class="modal-backdrop" id="apiModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon"><i class="fa-solid fa-sliders"></i></div>
+          <h3 id="modalTitle">Weather API Configuration</h3>
+        </div>
+        <button type="button" class="modal-close" id="closeModalBtn" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">
+          To fetch real-time live data for any city worldwide, enter your free OpenWeatherMap API key below. You can also switch to <strong>Interactive Demo Mode</strong> with realistic real-world simulation data anytime.
+        </p>
+
+        <div class="api-instructions-card">
+          <div class="instruction-step">
+            <span class="step-num">1</span>
+            <span>Sign up free at <a href="https://openweathermap.org/" target="_blank" rel="noopener">openweathermap.org</a></span>
+          </div>
+          <div class="instruction-step">
+            <span class="step-num">2</span>
+            <span>Copy your 32-character key from the <em>API keys</em> tab.</span>
+          </div>
+          <div class="instruction-step">
+            <span class="step-num">3</span>
+            <span>Paste it below or save it in <code>config.js</code>.</span>
+          </div>
+        </div>
+
+        <div class="input-field-group">
+          <label for="apiKeyInput">OpenWeather API Key:</label>
+          <div class="key-input-wrapper">
+            <input 
+              type="text" 
+              id="apiKeyInput" 
+              class="modal-input" 
+              placeholder="e.g. 3a8b2c1d0e9f8a7b6c5d4e3f2a1b0c9d" 
+              autocomplete="off"
+            >
+            <button type="button" class="paste-btn" id="pasteKeyBtn" title="Paste from clipboard">
+              <i class="fa-regular fa-clipboard"></i>
+            </button>
+          </div>
+          <span class="input-caption" id="keyValidationMessage"></span>
+        </div>
+
+        <div class="modal-status-box" id="modalStatusBox">
+          <i class="fa-solid fa-circle-info"></i>
+          <span id="modalStatusText">Current Mode: Demo Mode (Instant offline simulation enabled)</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-glass" id="enableDemoBtn">
+          <i class="fa-solid fa-vial"></i> Use Demo Mode
+        </button>
+        <button type="button" class="btn btn-primary" id="saveKeyBtn">
+          <i class="fa-solid fa-check"></i> Save & Connect Live
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+    <div class="loading-spinner-box">
+      <div class="spinner"></div>
+      <p class="loading-text" id="loadingText">Fetching live weather data...</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
